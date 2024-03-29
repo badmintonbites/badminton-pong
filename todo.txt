@@ -1,0 +1,15 @@
+Mise en place canvas ✅
+Dessiner middle line ✅
+Créer la class paddle ✅
+Etendre la class et créer deux enfants ✅
+Gérer les mouvements des paddles ✅
+Dessiner la balle ✅
+Gérer les déplacements de la balle ✅
+Gérer les collisions avec les murs ✅
+Gérer les collisions avec les paddles ✅
+Trigonometry ✅
+Ajouter infos, incrémenter et afficher score ✅
+Afficher gagnant et restart ✅
+Ajout background ✅
+Ajout fullscreen ✅
+Ajout mouvement sur mobile ✅
