@@ -198,6 +198,7 @@ window.addEventListener('load', () => {
             document.addEventListener("keydown", e => {
                 if ((e.key === "ArrowUp" ||
                     e.key === "ArrowDown") && !this.keys.includes(e.key)) {
+                    e.preventDefault(); // prevent scrolling up and down
                     this.keys.push(e.key);
                 }
             }, { signal: controller.signal });
