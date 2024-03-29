@@ -69,8 +69,8 @@ window.addEventListener('load', () => {
         ctx.fillText(theMode, canvas.width / 2, canvas.height / 10);
         if (!startGame) {
             ctx.fillText("Press Enter to start.", canvas.width / 2, canvas.height * 2 / 10);
-            ctx.fillText("Use Up and Down arrows to move. First to 3 points wins.", canvas.width / 2, canvas.height * 3 / 10);
-            ctx.fillText("If in 2 player mode, the left player uses A and Z to move.", canvas.width / 2, canvas.height * 4 / 10);
+            ctx.fillText("Use 'k' and 'm' keys to move. First to 3 points wins.", canvas.width / 2, canvas.height * 3 / 10);
+            ctx.fillText("If in 2 player mode, the left player uses 'a' and 'z' to move.", canvas.width / 2, canvas.height * 4 / 10);
         } else if (gameOver) {
             ctx.fillText("Press Enter to Play Again", canvas.width / 2, canvas.height / 1.6);
             ctx.font = "50px Arial";
@@ -133,9 +133,9 @@ window.addEventListener('load', () => {
                 if (currentMode != MODE.TWO_PLAYER) {
                     removeItemAll(this.keys, "z");
                 }
-            } else if (this.keys.includes("ArrowUp")) {
+            } else if (this.keys.includes("ArrowUp") || this.keys.includes("k")) {
                 rightPaddle.y -= this.speed;
-            } else if (this.keys.includes("ArrowDown")) {
+            } else if (this.keys.includes("ArrowDown") || this.keys.includes("m")) {
                 rightPaddle.y += this.speed;
             };
 
@@ -197,13 +197,13 @@ window.addEventListener('load', () => {
             this.touchY = '';
             document.addEventListener("keydown", e => {
                 if ((e.key === "ArrowUp" ||
-                    e.key === "ArrowDown") && !this.keys.includes(e.key)) {
+                    e.key === "ArrowDown" || e.key === "k" || e.key === "m") && !this.keys.includes(e.key)) {
                     this.keys.push(e.key);
                 }
             }, { signal: controller.signal });
             document.addEventListener("keyup", e => {
                 if (e.key === "ArrowUp" ||
-                    e.key === "ArrowDown") {
+                    e.key === "ArrowDown" || e.key === "k" || e.key === "m") {
                     this.keys.splice(this.keys.indexOf(e.key), 1);
                 }
             }, { signal: controller.signal });
