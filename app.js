@@ -130,8 +130,10 @@ window.addEventListener('load', () => {
 
         if (!startGame) {
             ctx.fillText("Press Enter to start.", canvas.width / 2, canvas.height * 2 / 10);
-            ctx.fillText("Use 'k' and 'm' keys to move. First to 3 points wins.", canvas.width / 2, canvas.height * 3 / 10);
+            ctx.fillText("Use 'k' and 'm' or up and down keys to move. First to 3 points wins.", canvas.width / 2, canvas.height * 3 / 10);
             ctx.fillText("If in 2 player mode, the left player uses 'a' and 'z' to move.", canvas.width / 2, canvas.height * 4 / 10);
+            ctx.fillText("Turn the sound UP!!", canvas.width / 2, canvas.height * 6 / 10);
+            ctx.fillText("And lastly, play in full screen mode :)", canvas.width / 2, canvas.height * 7 / 10);
         } else if (gameOver) {
             ctx.fillText("Press Enter to Play Again", canvas.width / 2, canvas.height / 1.6);
             ctx.font = "50px Arial";
