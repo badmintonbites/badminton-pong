@@ -1,3 +1,20 @@
+function playSound(audioId, volume=1, loop=false, fromBeginning=true, chance=1) {
+    const audio = document.getElementById(audioId);
+    if (!audio.paused) {
+        // Do nothing if the audio is already playing
+        return;
+    }
+    if (fromBeginning) {
+        audio.currentTime = 0;
+    }
+    if (1 - Math.random() > chance) {
+        return -1;
+    }
+    audio.loop = loop;
+    audio.volume = volume;
+    audio.play();
+}
+
 window.addEventListener('load', () => {
 
     let controller = new AbortController();
@@ -24,8 +41,18 @@ window.addEventListener('load', () => {
 
     function startingGame(e) {
         if (e.key === 'Enter') {
+            if (!startGame) {
+                pauseAndResetAllSounds();
+                if (currentMode == MODE.LIN_DAN) {
+                    playSound("officialThemeRemix", 0.34, true);
+                } else if (currentMode == MODE.TWO_PLAYER) {
+                    playSound("playOfTheDayMusic", 0.5, true);
+                } else {
+                    playSound("officialTheme", .25, true);
+                }
+            }
+            resetNumHits();
             startGame = true;
-            document.getElementById("music").play();
         };
         if (gameOver && (e.key === 'Enter')) {
             restartGame();
@@ -53,20 +80,54 @@ window.addEventListener('load', () => {
         ctx.fillText(scorePlayerRight, canvas.width / 2 + 100, 100);
     };
 
+    function incrementNumHits() {
+        const currentPoint = scorePlayerLeft + scorePlayerRight;
+        numHits[currentPoint]++;
+    }
+
+    function resetNumHits() {
+        for (let i = 0; i < numHits.length; i++) {
+            numHits[i] = 0;
+        }
+    }
+
+    function getCurrentNumHits() {
+        const currentPoint = scorePlayerLeft + scorePlayerRight;
+        return numHits[currentPoint];
+    }
+
     const modeText = {
         TWO_PLAYER: '2 Player Mode',
         NORMAL: 'Normal Mode',
         HARD: 'Hard Mode',
         LIN_DAN: 'Lin Dan Mode'
     };
+    
+    const pointsToWin = 3;
+    const numHits = [];
+    for (let i = 0; i < 2 * pointsToWin - 1; i++) {
+        numHits.push(0);
+    }
     //INFO START GAME
     function gameInfo() {
         ctx.font = "20px Arial";
         ctx.fillStyle = "#fff";
         ctx.textAlign = "center";
+        const currentPoint = scorePlayerLeft + scorePlayerRight;
+        numHits.forEach((hits, index) => {
+            if (index < currentPoint || hits > 0 || index == currentPoint && !gameOver) {
+                ctx.fillText(hits, (index + 1) * canvas.width / (numHits.length + 1), canvas.height - 20);
+            }
+        });
         
         const theMode = modeText[currentMode];
-        ctx.fillText(theMode, canvas.width / 2, canvas.height / 10);
+        if (currentMode == MODE.LIN_DAN) {
+            const linDanImg = document.getElementById("linDanImg");
+            ctx.drawImage(linDanImg, canvas.width / 2 - 50, canvas.height / 10 - 50, 100, 100);
+        } else {
+            ctx.fillText(theMode, canvas.width / 2, canvas.height / 10);
+        }
+
         if (!startGame) {
             ctx.fillText("Press Enter to start.", canvas.width / 2, canvas.height * 2 / 10);
             ctx.fillText("Use 'k' and 'm' keys to move. First to 3 points wins.", canvas.width / 2, canvas.height * 3 / 10);
@@ -74,19 +135,26 @@ window.addEventListener('load', () => {
         } else if (gameOver) {
             ctx.fillText("Press Enter to Play Again", canvas.width / 2, canvas.height / 1.6);
             ctx.font = "50px Arial";
-            if (scorePlayerLeft === 3) {
+            if (scorePlayerLeft === pointsToWin) {
                 if (currentMode == MODE.TWO_PLAYER) {
                     ctx.fillText("The Left Player Wins!", canvas.width / 2, canvas.height * 3 / 10);
                 } else {
                     ctx.fillText("You Lose!", canvas.width / 2, canvas.height * 3 / 10);
                 }
-            } else if (scorePlayerRight === 3) {
+            } else if (scorePlayerRight === pointsToWin) {
                 if (currentMode == MODE.TWO_PLAYER) {
                     ctx.fillText("The Right Player Wins!", canvas.width / 2, canvas.height * 3 / 10);
                 } else {
                     ctx.fillText("You Win!", canvas.width / 2, canvas.height * 3 / 10);
                 }
+                if (currentMode == MODE.LIN_DAN) {
+                    playSound("beatLinDan");
+                }
             };
+
+            if (currentMode != MODE.LIN_DAN && (scorePlayerLeft === pointsToWin && scorePlayerRight === (pointsToWin - 1) || scorePlayerRight === pointsToWin && scorePlayerLeft == pointsToWin - 1)) {
+                playSound("luckOfTheNetCaught");
+            }
         };
     };
 
@@ -259,7 +327,9 @@ window.addEventListener('load', () => {
 
                 //UPDATE BALL POSITION
                 this.x = rightPaddle.x - this.radius;
-                document.getElementById("smash").play();
+                playSound("smash");
+                playCommentatingSound();
+                incrementNumHits();
             }
 
             //COLLISION LEFT PADDLE
@@ -281,20 +351,30 @@ window.addEventListener('load', () => {
 
                 //UPDATE BALL POSITION
                 this.x = leftPaddle.x + leftPaddle.width + this.radius;
-                document.getElementById("smash").play();
+                playSound("smash");
+                playCommentatingSound();
+                incrementNumHits();
             };
 
             //SCORE
             if (this.x < 0) {
+                const numHits = getCurrentNumHits();
                 scorePlayerRight++;
+                if (scorePlayerRight == pointsToWin - 1 && numHits > 30) {
+                    playSound("whatAWayToBringUpGamePointOpportunity");
+                }
                 this.reset();
             } else if (this.x + this.radius > canvas.width) {
+                const numHits = getCurrentNumHits();
                 scorePlayerLeft++;
+                if (scorePlayerLeft == pointsToWin - 1 && numHits > 30) {
+                    playSound("whatAWayToBringUpGamePointOpportunity");
+                }
                 this.reset();
             };
 
             //GAME OVER
-            if (scorePlayerLeft === 3 || scorePlayerRight === 3) gameOver = true;
+            if (scorePlayerLeft === pointsToWin || scorePlayerRight === pointsToWin) gameOver = true;
         };
         draw() {
             const image = document.getElementById("birdie");
@@ -381,12 +461,15 @@ window.addEventListener('load', () => {
     }
 
     function restartGame() {
+        playIntroSong();
+        pauseAndResetAllSounds("BWFIntroSong");
         scorePlayerLeft = 0;
         scorePlayerRight = 0;
         gameOver = false;
         startGame = false;
         rightPaddle.reset();
         leftPaddle.reset();
+        resetNumHits();
         ball.reset();
         gameLoop(undefined, currentMode);
     };
@@ -423,10 +506,24 @@ window.addEventListener('load', () => {
 
     //FULLSCREEN
     function fullscreen() {
-        if (canvas.requestFullscreen) {
-            canvas.requestFullscreen();
-        }
+        const body = document.querySelector("#body");
+        requestFullScreen(body);
     };
+
+    function requestFullScreen(element) {
+        // Supports most browsers and their versions.
+        var requestMethod = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || element.msRequestFullScreen;
+    
+        if (requestMethod) { // Native full screen.
+            requestMethod.call(element);
+        } else if (typeof window.ActiveXObject !== "undefined") { // Older IE.
+            var wscript = new ActiveXObject("WScript.Shell");
+            if (wscript !== null) {
+                wscript.SendKeys("{F11}");
+            }
+        }
+    }
+
     btnFullscreen.addEventListener('click', fullscreen);
     btnTwoPlayer.addEventListener('click', () => changeMode(MODE.TWO_PLAYER));
     btnNormal.addEventListener('click', () => changeMode());
@@ -445,6 +542,48 @@ window.addEventListener('load', () => {
 
         if (!gameOver && mode == currentMode) requestAnimationFrame((ts) => gameLoop(ts, mode));
     }
-    document.getElementById("music").loop = true;
+
+    const commentatingSounds = ["unbelievable", "thisIsExtraordinary", "whatARally", "ohMyGoodness", "fabulous", "howOnEarthDidTheySaveThat", "ohMyGoodnessAndShesGotItBack", "ohMyGoodnessHesFallenOver", "sensational", "super", "thatsGotToBeThePlayOfTheDay", "heartAndSouldGoingIntoThatSmash", "ohBetweenTheLegs", "ohHowQuickWasThat"];
+    const commentatingTimeOut = 5000; // in milliseconds
+    let lastCommentatedTime = null;
+    function playCommentatingSound() {
+        if (getCurrentNumHits() < 10) {
+            return;
+        }
+        const currentTime = Date.now();
+        if (lastCommentatedTime && currentTime - lastCommentatedTime < commentatingTimeOut) {
+            return;
+        }
+        const randomIndex = getRandomInt(commentatingSounds.length);
+        const audioId = commentatingSounds[randomIndex];
+        const exitCode = playSound(audioId, 1, false, true, .2);
+        if (exitCode != -1) {
+            lastCommentatedTime = Date.now();
+        }
+    }
+
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * max);
+      }
+
+
+
+    const sounds = commentatingSounds.concat(["smash", "playOfTheDayMusic", "officialTheme", "officialThemeRemix", "beatLinDan", "BWFIntroSong", "whatAWayToBringUpGamePointOpportunity"]);
+    function pauseAndResetAllSounds(exceptions=[]) {
+        sounds.forEach((audioId) => {
+            const audio = document.getElementById(audioId);
+            if (audio && !exceptions.includes(audioId)) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        })
+    }
+
     gameLoop(0, currentMode);
+    
 });
+function playIntroSong() {
+    playSound("BWFIntroSong");
+    window.removeEventListener('click', playIntroSong);
+}
+window.addEventListener('click', playIntroSong);
